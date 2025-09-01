@@ -48,7 +48,7 @@ configure_domain() {
     fi
     
     # Update nginx configuration with domain
-    sed "s/server_name _;/server_name $domain _;/g" nginx.conf.template > nginx.conf
+    sed "s/\${DOMAIN_NAME}/$domain/g" nginx.conf.template > nginx.conf
     
     print_status "Updated nginx.conf with domain: $domain"
     
