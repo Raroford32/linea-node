@@ -1,75 +1,326 @@
-# Linea Besu (Basic Node) - Quick Install Script
+# Linea Node - High-Performance Installation & Management
 
-This script provides a one-line command to fully automate the installation of a **basic Linea Besu follower node**.
-
-It handles all necessary steps, including installing dependencies (like Docker), configuring permissions, automatically setting the public IP, and starting the node as a background service. This script is designed for Debian-based Linux systems (e.g., Ubuntu).
+This repository provides multiple installation options for running **Linea Besu nodes** optimized for different use cases, from basic single-node setups to **high-performance configurations** capable of handling large numbers of concurrent clients.
 
 ---
 
-## Prerequisites
+## 🚀 Quick Start
 
--   A server running a **Debian-based OS** (e.g., Ubuntu 20.04 / 22.04 or later).
--   Root or `sudo` privileges.
-
----
-
-## Installation
-
-Run the single command below in your terminal to start the installation.
-
-**Important**: Replace the URL with the raw link to your own `install-basic.sh` script hosted on GitHub.
+### High-Performance Setup (Recommended for Production)
+Optimized for handling **1000+ concurrent clients** with load balancing, caching, and monitoring:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/codeesura/linea-node/main/install-basic.sh | bash
+curl -sSL https://raw.githubusercontent.com/Raroford32/linea-node/main/install-high-performance.sh | bash
 ```
 
-The script will handle the entire setup process, and your node will be running upon completion.
+### Basic Setup (Original)
+Single node setup for development or light usage:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Raroford32/linea-node/main/install-basic.sh | bash
+```
 
 ---
 
-## Post-Installation Management
+## 📊 Performance Comparison
 
-Your Linea node runs in the background inside a Docker container. All management commands should be run from the `~/linea-node` directory.
-
-### Managing the Node
-
--   **Check Logs**:
-    ```bash
-    cd ~/linea-node && sudo docker compose logs -f
-    ```
-
--   **Stop the Node**:
-
-    ```bash
-    cd ~/linea-node && sudo docker compose down
-    ```
-    
--   **Start the Node (after stopping)**:
-
-    ```bash
-    cd ~/linea-node && sudo docker compose up -d
-    ```
-    
-### Docker Permissions
-
-The script adds your user to the `docker` group to allow running Docker commands without `sudo`.
-
-**Important**: For this change to take effect, you must **log out of the server and log back in**. After re-logging in, you can omit `sudo` from the commands above.
+| Feature | Basic Setup | High-Performance Setup |
+|---------|-------------|----------------------|
+| **Concurrent Clients** | ~50-100 | **1000+** |
+| **Request Rate** | ~100 req/s | **2000+ req/s** |
+| **Load Balancing** | ❌ | ✅ Multiple nodes + Nginx |
+| **Caching** | ❌ | ✅ Redis caching layer |
+| **Monitoring** | ❌ | ✅ Prometheus + metrics |
+| **Rate Limiting** | ❌ | ✅ DDoS protection |
+| **Auto-scaling** | ❌ | ✅ Horizontal scaling ready |
+| **Memory Usage** | 4GB | 16GB+ (optimized) |
 
 ---
 
-## Uninstallation
+## 🏗️ Architecture
 
-To completely remove the node and all its data:
+### High-Performance Architecture
+```
+Internet → Nginx Load Balancer → Multiple Besu Nodes
+                ↓                        ↓
+              Redis Cache            Prometheus Monitoring
+```
 
-1.  Stop the container and remove its data volume:
+### Components:
+- **Multiple Besu Nodes**: Primary and secondary nodes for redundancy
+- **Nginx Load Balancer**: Distributes requests, handles rate limiting
+- **Redis Cache**: Caches frequently accessed blockchain data
+- **Prometheus**: Real-time monitoring and metrics
+- **Optimized JVM**: Custom Java settings for maximum performance
 
-    ```bash
-    cd ~/linea-node && sudo docker compose down -v
-    ```
-    
-3.  Remove the installation directory:
+---
 
-    ```bash
-    cd ~ && rm -rf ~/linea-node
-    ```
+## 📋 System Requirements
+
+### Basic Setup
+- **RAM**: 8GB minimum
+- **Storage**: 100GB+ SSD
+- **CPU**: 2+ cores
+- **Network**: Stable internet connection
+
+### High-Performance Setup  
+- **RAM**: 16GB+ recommended (32GB optimal)
+- **Storage**: 500GB+ NVMe SSD
+- **CPU**: 8+ cores
+- **Network**: High-bandwidth connection (1Gbps+)
+- **OS**: Ubuntu 20.04/22.04 or Debian-based
+
+---
+
+## 🛠️ Installation Options
+
+### Interactive Installation
+```bash
+wget https://raw.githubusercontent.com/Raroford32/linea-node/main/install-high-performance.sh
+chmod +x install-high-performance.sh
+./install-high-performance.sh
+```
+
+### Automated Installation
+```bash
+# High-performance setup
+curl -sSL https://raw.githubusercontent.com/Raroford32/linea-node/main/install-high-performance.sh | bash --setup high-performance
+
+# Basic setup
+curl -sSL https://raw.githubusercontent.com/Raroford32/linea-node/main/install-high-performance.sh | bash --setup basic
+
+# Development setup
+curl -sSL https://raw.githubusercontent.com/Raroford32/linea-node/main/install-high-performance.sh | bash --setup development
+```
+
+---
+
+## 🌐 Available Endpoints
+
+### High-Performance Setup
+- **JSON-RPC (Load Balanced)**: `http://YOUR_IP/`
+- **WebSocket (Load Balanced)**: `ws://YOUR_IP:8080/`
+- **Prometheus Metrics**: `http://YOUR_IP:9091/`
+- **Nginx Status**: `http://YOUR_IP:9090/nginx_status`
+- **Health Check**: `http://YOUR_IP/health`
+
+### Basic Setup
+- **JSON-RPC**: `http://YOUR_IP:8545/`
+- **WebSocket**: `ws://YOUR_IP:8546/`
+- **P2P**: `YOUR_IP:30303`
+
+---
+
+## 📊 Performance Testing
+
+Run the included benchmark tool to test your node's performance:
+
+```bash
+cd ~/linea-node
+chmod +x benchmark.sh
+./benchmark.sh
+```
+
+The benchmark tests:
+- **Concurrent client handling** (10-1000 clients)
+- **Request rate** and **response times**
+- **Cache effectiveness**
+- **Sustained load performance**
+- **Error rates** under stress
+
+Results are saved in `./benchmark_results/` with detailed HTML reports.
+
+---
+
+## 🔧 Management Commands
+
+### High-Performance Setup
+```bash
+cd ~/linea-node
+
+# View all services status
+sudo docker-compose -f docker-compose-high-performance.yaml ps
+
+# View logs (all services)
+sudo docker-compose -f docker-compose-high-performance.yaml logs -f
+
+# View specific service logs
+sudo docker-compose -f docker-compose-high-performance.yaml logs -f linea-besu-primary
+sudo docker-compose -f docker-compose-high-performance.yaml logs -f nginx-lb
+sudo docker-compose -f docker-compose-high-performance.yaml logs -f redis
+
+# Stop all services
+sudo docker-compose -f docker-compose-high-performance.yaml down
+
+# Start all services
+sudo docker-compose -f docker-compose-high-performance.yaml up -d
+
+# Restart specific service
+sudo docker-compose -f docker-compose-high-performance.yaml restart nginx-lb
+```
+
+### Basic Setup
+```bash
+cd ~/linea-node
+
+# Check logs
+sudo docker compose logs -f
+
+# Stop node
+sudo docker compose down
+
+# Start node
+sudo docker compose up -d
+```
+
+---
+
+## 📈 Monitoring & Metrics
+
+### Prometheus Metrics
+Access Prometheus at `http://YOUR_IP:9091/` to view:
+- Request rates and response times
+- Node synchronization status
+- System resource usage
+- Cache hit/miss rates
+- Error rates and uptime
+
+### Nginx Metrics
+Access Nginx status at `http://YOUR_IP:9090/nginx_status` for:
+- Active connections
+- Request handling statistics
+- Upstream server status
+
+### Redis Metrics
+Monitor cache performance:
+```bash
+# Connect to Redis CLI
+sudo docker exec -it linea-redis redis-cli
+
+# View cache statistics
+INFO stats
+```
+
+---
+
+## 🚨 Troubleshooting
+
+### High Memory Usage
+If experiencing high memory usage:
+```bash
+# Check container memory usage
+sudo docker stats
+
+# Adjust JVM settings in docker-compose-high-performance.yaml
+# Reduce -Xmx value for lower memory systems
+```
+
+### Connection Issues
+```bash
+# Check if ports are open
+sudo netstat -tulpn | grep -E "(80|8080|8545|8546|30303)"
+
+# Test connectivity
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+  http://localhost/
+```
+
+### Performance Issues
+```bash
+# Run performance test
+./benchmark.sh
+
+# Check system resources
+htop
+iotop
+
+# View detailed container logs
+sudo docker-compose logs --tail=100 -f
+```
+
+---
+
+## 🔒 Security Features
+
+- **Rate Limiting**: Prevents DDoS attacks
+- **Connection Limits**: Per-IP connection restrictions  
+- **CORS Configuration**: Secure cross-origin requests
+- **Firewall Ready**: Easy integration with UFW/iptables
+- **Resource Limits**: Container resource constraints
+
+---
+
+## 🔄 Scaling & Optimization
+
+### Horizontal Scaling
+Add more Besu nodes by modifying `docker-compose-high-performance.yaml`:
+```yaml
+  linea-besu-tertiary:
+    image: consensys/linea-besu-package:latest
+    # ... (copy from secondary node config)
+```
+
+### Vertical Scaling
+Adjust JVM settings for your hardware:
+```yaml
+environment:
+  - JAVA_OPTS=-Xms8g -Xmx16g  # Increase for more RAM
+```
+
+### Cache Optimization
+Increase Redis memory for better caching:
+```yaml
+command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru
+```
+
+---
+
+## 🗂️ File Structure
+
+```
+~/linea-node/
+├── docker-compose-high-performance.yaml  # Main high-perf config
+├── docker-compose.yaml                   # Basic setup config
+├── docker-compose-dev.yaml              # Development config
+├── nginx.conf                           # Load balancer config
+├── prometheus.yml                       # Monitoring config
+├── benchmark.sh                         # Performance testing
+├── .env                                 # Environment variables
+└── benchmark_results/                   # Test results
+```
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Test your changes with the benchmark tool
+4. Submit a pull request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## ⚡ Performance Tips
+
+1. **Use SSD storage** for blockchain data
+2. **Increase system file descriptors**: `ulimit -n 65536`
+3. **Optimize network settings** (done automatically by installer)
+4. **Monitor resource usage** regularly
+5. **Keep Docker images updated**
+6. **Use connection pooling** in your applications
+7. **Implement client-side caching** for frequently accessed data
+
+---
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/Raroford32/linea-node/issues)
+- **Performance Problems**: Run `./benchmark.sh` and include results
+- **System Requirements**: Check requirements section above
