@@ -110,7 +110,7 @@ configure_domain() {
                 fi
                 
                 # Basic domain validation
-                if [[ "$DOMAIN_INPUT" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$ ]]; then
+                if [[ "$DOMAIN_INPUT" =~ ^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$ ]]; then
                     DOMAIN_NAME="$DOMAIN_INPUT"
                     print_status "Domain configured: $DOMAIN_NAME"
                     echo "DOMAIN_NAME=$DOMAIN_NAME" >> .env
