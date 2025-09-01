@@ -95,6 +95,47 @@ curl -sSL https://raw.githubusercontent.com/Raroford32/linea-node/main/install-h
 
 ---
 
+## 🌐 Domain Configuration
+
+### Setting Up a Custom Domain
+
+The high-performance setup supports custom domain names for easier access:
+
+```bash
+# Configure a domain during installation (interactive prompt)
+# Or configure manually after installation:
+cd ~/linea-node
+./configure-domain.sh your-domain.com
+```
+
+### Domain Configuration Examples
+```bash
+# Configure a domain
+./configure-domain.sh my-linea-node.com
+
+# Configure a subdomain  
+./configure-domain.sh rpc.mydomain.org
+
+# Reset to IP-only configuration
+./configure-domain.sh --reset
+
+# View help
+./configure-domain.sh --help
+```
+
+### DNS Requirements
+After configuring a domain, ensure your DNS records point to your server:
+- **A Record**: `your-domain.com` → `SERVER_IP_ADDRESS`
+- **CNAME Record**: `www.your-domain.com` → `your-domain.com` (optional)
+
+### Available Endpoints with Domain
+- **JSON-RPC**: `http://your-domain.com/`
+- **WebSocket**: `ws://your-domain.com:8080/`
+- **Health Check**: `http://your-domain.com/health`
+- **Monitoring**: `http://your-domain.com:9091/`
+
+---
+
 ## 🌐 Available Endpoints
 
 ### High-Performance Setup
@@ -157,6 +198,12 @@ sudo docker-compose -f docker-compose-high-performance.yaml up -d
 
 # Restart specific service
 sudo docker-compose -f docker-compose-high-performance.yaml restart nginx-lb
+
+# Configure custom domain
+./configure-domain.sh your-domain.com
+
+# Reset to IP-only configuration
+./configure-domain.sh --reset
 ```
 
 ### Basic Setup
@@ -204,6 +251,21 @@ INFO stats
 ---
 
 ## 🚨 Troubleshooting
+
+### Common Issues
+
+**JVM Errors (Multiple garbage collectors selected)**
+- **Fixed**: The configuration now uses only G1GC, removing conflicts with ZGC
+- If you encounter this error with older versions, update your configuration
+
+**Nginx "Host not found" Errors**
+- **Fixed**: Added health checks to ensure Besu nodes are ready before nginx starts
+- Services now have proper startup dependencies with health checks
+
+**Domain Configuration**
+- Use `./configure-domain.sh your-domain.com` to set up custom domain names
+- Ensure your DNS points to the server's IP address
+- Reset with `./configure-domain.sh --reset`
 
 ### High Memory Usage
 If experiencing high memory usage:

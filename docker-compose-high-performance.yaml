@@ -36,7 +36,7 @@ services:
       --tx-pool-max-size=4096
       --tx-pool-price-bump=10
     environment:
-      - JAVA_OPTS=-Xms4g -Xmx8g -XX:+UseG1GC -XX:G1HeapRegionSize=32m -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+UseZGC
+      - JAVA_OPTS=-Xms4g -Xmx8g -XX:+UseG1GC -XX:G1HeapRegionSize=32m -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=100
     ports:
       - "30303:30303"
       - "8545:8545"
@@ -48,6 +48,12 @@ services:
       - linea-network
     depends_on:
       - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8545/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # Secondary Linea Besu node for load distribution
   linea-besu-secondary:
@@ -73,7 +79,7 @@ services:
       --tx-pool-max-size=4096
       --tx-pool-price-bump=10
     environment:
-      - JAVA_OPTS=-Xms4g -Xmx8g -XX:+UseG1GC -XX:G1HeapRegionSize=32m -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+UseZGC
+      - JAVA_OPTS=-Xms4g -Xmx8g -XX:+UseG1GC -XX:G1HeapRegionSize=32m -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=100
     ports:
       - "30304:30303"
       - "8547:8545"
@@ -85,6 +91,12 @@ services:
       - linea-network
     depends_on:
       - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8545/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # Nginx load balancer for distributing client requests
   nginx-lb:
@@ -100,8 +112,10 @@ services:
     networks:
       - linea-network
     depends_on:
-      - linea-besu-primary
-      - linea-besu-secondary
+      linea-besu-primary:
+        condition: service_healthy
+      linea-besu-secondary:
+        condition: service_healthy
 
   # Prometheus for monitoring (optional)
   prometheus:
