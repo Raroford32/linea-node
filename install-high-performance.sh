@@ -248,10 +248,10 @@ start_node() {
     print_status "Starting Linea node..."
     
     # Pull images first
-    sudo docker-compose -f "$COMPOSE_FILE" pull
+    sudo docker compose -f "$COMPOSE_FILE" pull
     
     # Start the services
-    sudo docker-compose -f "$COMPOSE_FILE" up -d
+    sudo docker compose -f "$COMPOSE_FILE" up -d
     
     # Wait for services to start
     print_status "Waiting for services to start..."
@@ -260,7 +260,7 @@ start_node() {
     # Check if services are running
     if [ "$SETUP_TYPE" == "high-performance" ]; then
         print_status "Checking service status..."
-        sudo docker-compose -f "$COMPOSE_FILE" ps
+        sudo docker compose -f "$COMPOSE_FILE" ps
     fi
 }
 
@@ -308,10 +308,10 @@ print_completion_info() {
     
     echo ""
     echo -e "${BLUE}Management Commands:${NC}"
-    echo "• Check logs: cd $INSTALL_DIR && sudo docker-compose -f $COMPOSE_FILE logs -f"
-    echo "• Stop node: cd $INSTALL_DIR && sudo docker-compose -f $COMPOSE_FILE down"
-    echo "• Start node: cd $INSTALL_DIR && sudo docker-compose -f $COMPOSE_FILE up -d"
-    echo "• View status: cd $INSTALL_DIR && sudo docker-compose -f $COMPOSE_FILE ps"
+    echo "• Check logs: cd $INSTALL_DIR && sudo docker compose -f $COMPOSE_FILE logs -f"
+    echo "• Stop node: cd $INSTALL_DIR && sudo docker compose -f $COMPOSE_FILE down"
+    echo "• Start node: cd $INSTALL_DIR && sudo docker compose -f $COMPOSE_FILE up -d"
+    echo "• View status: cd $INSTALL_DIR && sudo docker compose -f $COMPOSE_FILE ps"
     if [ "$SETUP_TYPE" == "high-performance" ]; then
         echo "• Configure domain: cd $INSTALL_DIR && ./configure-domain.sh [domain]"
         echo "• Performance test: cd $INSTALL_DIR && ./benchmark.sh"

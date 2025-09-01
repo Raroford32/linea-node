@@ -49,11 +49,11 @@ services:
     depends_on:
       - redis
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8545/"]
+      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/8545' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
 
   # Secondary Linea Besu node for load distribution
   linea-besu-secondary:
@@ -92,11 +92,11 @@ services:
     depends_on:
       - redis
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8545/"]
+      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/8545' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
 
   # Nginx load balancer for distributing client requests
   nginx-lb:
