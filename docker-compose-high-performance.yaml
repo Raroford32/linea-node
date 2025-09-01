@@ -32,9 +32,7 @@ services:
       --remote-connections-max-percentage=80
       --sync-mode=FULL
       --data-storage-format=BONSAI
-      --bonsai-limit-trie-logs-enabled=true
-      --tx-pool-max-size=4096
-      --tx-pool-price-bump=10
+      --bonsai-limit-trie-logs-enabled=false
     environment:
       - JAVA_OPTS=-Xms4g -Xmx8g -XX:+UseG1GC -XX:G1HeapRegionSize=32m -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=100
     ports:
@@ -75,9 +73,7 @@ services:
       --remote-connections-max-percentage=80
       --sync-mode=FULL
       --data-storage-format=BONSAI
-      --bonsai-limit-trie-logs-enabled=true
-      --tx-pool-max-size=4096
-      --tx-pool-price-bump=10
+      --bonsai-limit-trie-logs-enabled=false
     environment:
       - JAVA_OPTS=-Xms4g -Xmx8g -XX:+UseG1GC -XX:G1HeapRegionSize=32m -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=100
     ports:
