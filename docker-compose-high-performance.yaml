@@ -1,0 +1,134 @@
+services:
+  # Redis for caching frequently accessed blockchain data
+  redis:
+    image: redis:7-alpine
+    container_name: linea-redis
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --save 60 1000
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - linea-network
+
+  # Primary Linea Besu node with optimized settings
+  linea-besu-primary:
+    image: consensys/linea-besu-package:latest
+    container_name: linea-besu-primary
+    command: >
+      --profile=basic-mainnet
+      --p2p-host=${PUBLIC_IP:-127.0.0.1}
+      --rpc-http-enabled=true
+      --rpc-http-host=0.0.0.0
+      --rpc-http-port=8545
+      --rpc-http-cors-origins="*"
+      --rpc-ws-enabled=true
+      --rpc-ws-host=0.0.0.0
+      --rpc-ws-port=8546
+      --p2p-port=30303
+      --max-peers=100
+      --remote-connections-limit-enabled=true
+      --remote-connections-max-percentage=80
+      --sync-mode=FULL
+      --data-storage-format=BONSAI
+      --bonsai-limit-trie-logs-enabled=true
+      --tx-pool-max-size=4096
+      --tx-pool-price-bump=10
+    environment:
+      - JAVA_OPTS=-Xms4g -Xmx8g -XX:+UseG1GC -XX:G1HeapRegionSize=32m -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+UseZGC
+    ports:
+      - "30303:30303"
+      - "8545:8545"
+      - "8546:8546"
+    volumes:
+      - besu_data_primary:/data
+    restart: unless-stopped
+    networks:
+      - linea-network
+    depends_on:
+      - redis
+
+  # Secondary Linea Besu node for load distribution
+  linea-besu-secondary:
+    image: consensys/linea-besu-package:latest
+    container_name: linea-besu-secondary
+    command: >
+      --profile=basic-mainnet
+      --p2p-host=${PUBLIC_IP:-127.0.0.1}
+      --rpc-http-enabled=true
+      --rpc-http-host=0.0.0.0
+      --rpc-http-port=8545
+      --rpc-http-cors-origins="*"
+      --rpc-ws-enabled=true
+      --rpc-ws-host=0.0.0.0
+      --rpc-ws-port=8546
+      --p2p-port=30304
+      --max-peers=100
+      --remote-connections-limit-enabled=true
+      --remote-connections-max-percentage=80
+      --sync-mode=FULL
+      --data-storage-format=BONSAI
+      --bonsai-limit-trie-logs-enabled=true
+      --tx-pool-max-size=4096
+      --tx-pool-price-bump=10
+    environment:
+      - JAVA_OPTS=-Xms4g -Xmx8g -XX:+UseG1GC -XX:G1HeapRegionSize=32m -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+UseZGC
+    ports:
+      - "30304:30303"
+      - "8547:8545"
+      - "8548:8546"
+    volumes:
+      - besu_data_secondary:/data
+    restart: unless-stopped
+    networks:
+      - linea-network
+    depends_on:
+      - redis
+
+  # Nginx load balancer for distributing client requests
+  nginx-lb:
+    image: nginx:alpine
+    container_name: linea-nginx-lb
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "9090:9090"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    networks:
+      - linea-network
+    depends_on:
+      - linea-besu-primary
+      - linea-besu-secondary
+
+  # Prometheus for monitoring (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: linea-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - linea-network
+
+volumes:
+  besu_data_primary:
+  besu_data_secondary:
+  redis_data:
+  prometheus_data:
+
+networks:
+  linea-network:
+    driver: bridge
