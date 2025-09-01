@@ -90,6 +90,47 @@ select_setup_type() {
     print_status "Selected setup type: $SETUP_TYPE"
 }
 
+configure_domain() {
+    if [ "$SETUP_TYPE" == "high-performance" ]; then
+        echo ""
+        echo -e "${BLUE}Domain Configuration (Optional):${NC}"
+        echo "You can configure a custom domain name for your Linea node."
+        echo "This is optional - you can always configure it later using ./configure-domain.sh"
+        echo ""
+        read -p "Do you have a domain name you'd like to use? (y/N): " -n 1 -r
+        echo
+        
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            while true; do
+                read -p "Enter your domain name (e.g., my-linea-node.com): " DOMAIN_INPUT
+                
+                if [ -z "$DOMAIN_INPUT" ]; then
+                    print_warning "Domain name cannot be empty. Skipping domain configuration."
+                    break
+                fi
+                
+                # Basic domain validation
+                if [[ "$DOMAIN_INPUT" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$ ]]; then
+                    DOMAIN_NAME="$DOMAIN_INPUT"
+                    print_status "Domain configured: $DOMAIN_NAME"
+                    echo "DOMAIN_NAME=$DOMAIN_NAME" >> .env
+                    
+                    # Configure nginx template
+                    if [ -f "nginx.conf.template" ]; then
+                        sed "s/server_name _;/server_name $DOMAIN_NAME _;/g" nginx.conf.template > nginx.conf
+                        print_status "Nginx configured for domain: $DOMAIN_NAME"
+                    fi
+                    break
+                else
+                    print_error "Invalid domain format. Please enter a valid domain name."
+                fi
+            done
+        else
+            print_status "Skipping domain configuration. You can configure it later with ./configure-domain.sh"
+        fi
+    fi
+}
+
 install_dependencies() {
     print_status "Installing required packages..."
     export DEBIAN_FRONTEND=noninteractive
@@ -236,10 +277,21 @@ print_completion_info() {
     
     if [ "$SETUP_TYPE" == "high-performance" ]; then
         echo -e "${BLUE}Available Endpoints:${NC}"
-        echo "• JSON-RPC (Load Balanced): http://$PUBLIC_IP/"
-        echo "• WebSocket (Load Balanced): ws://$PUBLIC_IP:8080/"
-        echo "• Monitoring: http://$PUBLIC_IP:9091/ (Prometheus)"
-        echo "• Nginx Status: http://$PUBLIC_IP:9090/nginx_status"
+        if [ -n "$DOMAIN_NAME" ]; then
+            echo "• JSON-RPC (Load Balanced): http://$DOMAIN_NAME/"
+            echo "• WebSocket (Load Balanced): ws://$DOMAIN_NAME:8080/"
+            echo "• Monitoring: http://$DOMAIN_NAME:9091/ (Prometheus)"
+            echo "• Nginx Status: http://$DOMAIN_NAME:9090/nginx_status"
+            echo ""
+            echo -e "${YELLOW}Domain Configuration:${NC}"
+            echo "• Domain Name: $DOMAIN_NAME"
+            echo "• Make sure your DNS points to: $PUBLIC_IP"
+        else
+            echo "• JSON-RPC (Load Balanced): http://$PUBLIC_IP/"
+            echo "• WebSocket (Load Balanced): ws://$PUBLIC_IP:8080/"
+            echo "• Monitoring: http://$PUBLIC_IP:9091/ (Prometheus)"
+            echo "• Nginx Status: http://$PUBLIC_IP:9090/nginx_status"
+        fi
         echo ""
         echo -e "${BLUE}Performance Features:${NC}"
         echo "• Multiple Besu nodes with load balancing"
@@ -260,6 +312,10 @@ print_completion_info() {
     echo "• Stop node: cd $INSTALL_DIR && sudo docker-compose -f $COMPOSE_FILE down"
     echo "• Start node: cd $INSTALL_DIR && sudo docker-compose -f $COMPOSE_FILE up -d"
     echo "• View status: cd $INSTALL_DIR && sudo docker-compose -f $COMPOSE_FILE ps"
+    if [ "$SETUP_TYPE" == "high-performance" ]; then
+        echo "• Configure domain: cd $INSTALL_DIR && ./configure-domain.sh [domain]"
+        echo "• Performance test: cd $INSTALL_DIR && ./benchmark.sh"
+    fi
     echo ""
     echo -e "${YELLOW}Important: To use Docker without 'sudo', log out and log back in.${NC}"
     echo -e "${GREEN}=================================================================="
@@ -310,6 +366,7 @@ main() {
     install_dependencies
     setup_node_directory
     download_configurations
+    configure_domain
     optimize_system
     start_node
     print_completion_info
